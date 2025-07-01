@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Все объявления</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #0d6efd;
+            --accent-red: #dc3545;
+            --light-gray: #f8f9fa;
+        }
+        /* Добавить в начало стилей */
+    .table-sm {
+        font-size: 0.875rem;
+    }
+
+    /* Фиксированный контейнер с прокруткой */
+    .scrollable-table-container {
+        max-height: 65vh;
+        overflow-y: auto;
+        margin-top: 20px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+    /* Липкий заголовок таблицы */
+    .table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+        box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
+    }
+    /* Обновленные стили для таблицы */
+    .table-container table {
+        font-size: 0.9rem;
+    }
+
+    .table-container th,
+    .table-container td {
+        padding: 0.5rem;
+    }
+
+    .btn-action {
+        padding: 3px 6px;
+        font-size: 0.8rem;
+    }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .admin-navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        }
+
+        .admin-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .filters-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .table thead {
+            background-color: var(--light-gray);
+        }
+
+        .table th {
+            font-weight: 600;
+            color: #495057;
+            vertical-align: middle;
+        }
+
+        .table th.filter-header {
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .table th.data-header {
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            background-color: white;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn-action {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-edit:hover {
+            background-color: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-delete {
+            background-color: var(--accent-red);
+            border-color: var(--accent-red);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #bd2130;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .empty-state {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #e9ecef;
+        }
+
+        .btn-apply {
+            background-color: var(--primary-blue);
+            color: white;
+            transition: all 0.2s;
+            padding: 8px 20px;
+        }
+
+        .btn-apply:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 20px;
+        }
+
+        .btn-reset:hover {
+            background-color: #5c636a;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark admin-navbar">
+        <div class="container">
+            <a class="navbar-brand admin-brand" href="{{ url_for('admin_dashboard') }}">
+                <i class="fas fa-crown me-2"></i>Админ-панель
+            </a>
+            <div class="d-flex">
+                <span class="navbar-text me-3 d-none d-md-block">Администратор: {{ session['user_name'] }}</span>
+                <div class="btn-group">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light">
+                        <i class="fas fa-tachometer-alt me-1"></i>Панель
+                    </a>
+                    <a class="btn btn-outline-light" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-1"></i>Выйти
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Все объявления</h2>
+            <a href="{{ url_for('add_listing_admin') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>Добавить объявление
+            </a>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="filters-card">
+            <form method="GET" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Название</label>
+                        <input type="text" class="form-control" name="title" value="{{ request.args.get('title', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Город</label>
+                        <input type="text" class="form-control" name="city" value="{{ request.args.get('city', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Тип недвижимости</label>
+                        <select class="form-select" name="property_type">
+                            <option value="">Все</option>
+                            {% for prop_type in property_types %}
+                            <option value="{{ prop_type }}"
+                                {% if request.args.get('property_type') == prop_type %}selected{% endif %}>
+                                {{ prop_type }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Статус</label>
+                        <select class="form-select" name="status">
+                            <option value="">Все</option>
+                            <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Активно</option>
+                            <option value="sold" {% if request.args.get('status') == 'sold' %}selected{% endif %}>Продано</option>
+                            <option value="archived" {% if request.args.get('status') == 'archived' %}selected{% endif %}>Архив</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Цена от</label>
+                        <input type="number" class="form-control" name="price_min" value="{{ request.args.get('price_min', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Цена до</label>
+                        <input type="number" class="form-control" name="price_max" value="{{ request.args.get('price_max', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Район</label>
+                        <input type="text" class="form-control" name="district" value="{{ request.args.get('district', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Агент</label>
+                        <select class="form-select" name="agent_id">
+                            <option value="">Все</option>
+                            {% for agent in agents %}
+                            <option value="{{ agent.id }}"
+                                {% if request.args.get('agent_id') | int == agent.id %}selected{% endif %}>
+                                {{ agent.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-12 mt-3 d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-apply">
+                            <i class="fas fa-filter me-1"></i>Применить фильтры
+                        </button>
+                        <button type="button" class="btn btn-reset" onclick="resetFilters()">
+                            <i class="fas fa-times me-1"></i>Сбросить
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Таблица объявлений -->
+        <div class="table-container">
+            <div class="scrollable-table-container">
+            <table class="table table-hover table-sm">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Агент</th>
+                        <th>Цена</th>
+                        <th>Город</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+    {% if listings %}
+        {% for listing in listings %}
+        <tr>
+            <td>{{ listing.title }}</td>
+            <td>{{ listing.agent_name }}</td>
+            <td>{{ listing.price | int }} ₽</td>
+            <td>{{ listing.city }}</td>
+            <td>
+                <span class="status-badge
+                    {% if listing.status == 'active' %}bg-success
+                    {% elif listing.status == 'sold' %}bg-info
+                    {% else %}bg-secondary{% endif %}">
+                    {% if listing.status == 'active' %}Активно
+                    {% elif listing.status == 'sold' %}Продано
+                    {% else %}Архив{% endif %}
+                </span>
+            </td>
+            <td>
+                <a href="{{ url_for('edit_listing', listing_id=listing.id, next=request.full_path) }}"
+                    class="btn btn-edit btn-action me-2">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="{{ url_for('delete_listing', listing_id=listing.id, next=request.full_path) }}"
+                      method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-delete btn-action"
+                            onclick="return confirm('Вы уверены, что хотите удалить это объявление?');">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <!-- ... -->
+    {% endif %}
+</tbody>
+            </table>
+        </div>
+        </div>
+
+
+
+    <script>
+        function resetFilters() {
+            // Очищаем все поля формы
+            document.querySelectorAll('#filterForm input').forEach(input => {
+                if (input.type !== 'submit' && input.type !== 'button') {
+                    input.value = '';
+                }
+            });
+
+            document.querySelectorAll('#filterForm select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+
+            // Отправляем форму
+            document.getElementById('filterForm').submit();
+        }
+    </script>
+</body>
+</html>

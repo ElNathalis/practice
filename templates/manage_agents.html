@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Управление агентами</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+    /* Общие стили таблицы */
+        .table {
+            font-size: 0.9rem; /* Уменьшаем размер шрифта */
+        }
+
+        /* Стили для строки администратора */
+        .admin-row {
+            background-color: #e3f2fd; /* Синий фон для администраторов */
+        }
+
+        /* Стили для ячейки с паролем */
+        .password-cell {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .password-text {
+            -webkit-text-security: disc;
+            font-family: monospace;
+            letter-spacing: 2px;
+            flex-grow: 1; /* Занимает доступное пространство */
+            min-width: 120px; /* Увеличиваем минимальную ширину */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .password-text.visible {
+            -webkit-text-security: none;
+        }
+        .password-toggle-btn {
+            flex-shrink: 0; /* Не сжимается */
+            margin-left: 10px; /* Отступ от текста */
+        }
+
+        /* Фиксированные ширины столбцов */
+        .col-id {
+            width: 60px; /* Уже для ID */
+        }
+        .col-phone {
+            width: 150px; /* Фиксированная ширина для телефона */
+            white-space: nowrap; /* Текст в одну строку */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Троеточие при переполнении */
+        }
+        .col-listings {
+            width: 100px; /* Фиксированная ширина для количества объявлений */
+            text-align: center; /* Выравнивание по центру */
+        }
+        .col-password {
+            min-width: 250px; /* Минимальная ширина для пароля */
+        }
+        .col-actions {
+            width: 200px; /* Фиксированная ширина для действий */
+        }
+
+        /* Прокрутка таблицы */
+        .table-container {
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+        }
+
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7);">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('admin_dashboard') }}">
+                <i class="fas fa-crown me-2"></i>Админ-панель
+            </a>
+            <div class="d-flex">
+                <span class="navbar-text me-3 d-none d-md-block">Администратор: {{ session['user_name'] }}</span>
+                <a class="btn btn-outline-light" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Выйти
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Управление агентами</h2>
+            <a href="{{ url_for('add_agent') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>Добавить агента
+            </a>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th class="col-id">ID</th>
+                        <th>Имя</th>
+                        <th>Логин</th>
+                        <th class="col-phone">Телефон</th>
+                        <th class="col-listings">Активные объявления</th>
+                        <th class="col-actions">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agent in agents %}
+                    <tr class="{% if agent.role == 'admin' %}admin-row{% endif %}">
+                        <td class="col-id">{{ agent.id }}</td>
+                        <td>{{ agent.name }}</td>
+                        <td>{{ agent.login }}</td>
+                        <td class="col-phone">{{ agent.phone or '-' }}</td>
+                        <td class="col-listings">{{ agent.active_listings }}</td>
+
+                        <td class="col-actions action-buttons">
+                            <a href="{{ url_for('edit_agent', agent_id=agent.id) }}" class="btn btn-warning btn-sm me-1">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if agent.id != session['user_id'] %}
+                            <form action="{{ url_for('delete_agent', agent_id=agent.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Вы уверены, что хотите удалить этого агента?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(agentId, password) {
+            const element = document.getElementById(`password-${agentId}`);
+            const button = event.currentTarget;
+            const icon = button.querySelector('i');
+
+            if (element.classList.contains('visible')) {
+                element.classList.remove('visible');
+                element.textContent = '••••••••';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+                button.title = "Показать пароль";
+            } else {
+                element.classList.add('visible');
+                element.textContent = password;
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+                button.title = "Скрыть пароль";
+            }
+        }
+    </script>
+</body>
+</html>
